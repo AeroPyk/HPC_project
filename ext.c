@@ -4,8 +4,6 @@
 
 #include <stdio.h>
 #include <mpi.h>
-#include <math.h>
-#include <time.h>
 #include <stdlib.h>
 #include "ext.h"
 
@@ -74,26 +72,44 @@ void printMat(int** mat, int row, int col){
         }
         printf("\n");
     }
+    printf("\n");
 }
 
-void initMat(int** mat){
+void initRandMat(int** mat, int row, int col){
 
-    for (int i = 0; i < MDIM; ++i) {
-        for (int j = 0; j < MDIM; ++j) {
+    for (int i = 0; i < row; ++i) {
+        for (int j = 0; j < col; ++j) {
             mat[i][j] = rand();
         }
     }
 }
 
-void writeMat(char name[], int row, int col) {
+void initZeroMat(int** mat, int row, int col){
 
+    for (int i = 0; i < row; ++i) {
+        for (int j = 0; j < col; ++j) {
+            mat[i][j] = 0;
+        }
+    }
+}
+
+void writeRandMat(char *name, int row, int col) {
+
+    int** mat;
+    mat = createMat(row, col);
+    initRandMat(mat, row, col);
+
+    writeMat(name, mat, row, col);
+
+    free(mat);
+
+}
+
+void writeMat(char *name, int** mat, int row, int col){
     FILE* file = fopen(name, "w");
 
     if(file != NULL){
 
-        int** mat;
-        mat = createMat(row, col);
-        initMat(mat);
         fprintf(file, "%d %d ", row, col);
 
         for (int i = 0; i < row; ++i) {
@@ -101,8 +117,6 @@ void writeMat(char name[], int row, int col) {
                 fprintf(file,"%d ", mat[i][j]);
             }
         }
-
-        free(mat);
 
         fclose(file);
     } else {
@@ -128,9 +142,12 @@ int** loadMat(char *name) {
 
         }
 
-        return mat;
 
         fclose(file);
+
+        return mat;
+
+
     } else {
         printf("Error reading file");
         return NULL;
@@ -162,9 +179,9 @@ int** loadSubMatFromFile(char* name, int row, int col, MPI_Comm com) {
     int coords[NDIM];
     MPI_Cart_coords(com, rank, NDIM, coords);
 
-    // printf("debug:%d,%d, rank %d", coords[0], coords[1], rank);
-
     FILE* file = fopen(name, "r");
+
+
 
     if(file != NULL){
         int size[2];
@@ -172,10 +189,10 @@ int** loadSubMatFromFile(char* name, int row, int col, MPI_Comm com) {
         fscanf(file, "%d %d ", &size[0], &size[1]);
 
         int** submat = createMat(row, col);
-        int offset;
-        int last;
+        int offset = 0;
+        int last = 0;
         int num;
-        int x, y;
+        int x, y = 0;
 
         for (int i = 0; i < row; ++i) {
             for (int j = 0; j < col; ++j) {
@@ -194,9 +211,11 @@ int** loadSubMatFromFile(char* name, int row, int col, MPI_Comm com) {
 
         }
 
+        // printf("debug %d,%d - %d - %s - %d\n", row, col, rank, name, submat[0][0]);
+        fclose(file);
+
         return submat;
 
-        fclose(file);
     } else {
         printf("Error reading file");
         return NULL;
@@ -211,5 +230,32 @@ int** createMat(int row, int col){
         arr[i] = (int *)malloc(col * sizeof(int));
 
     return arr;
+
+}
+
+void perfMultiply(int** A, int** B, int** C, int size){
+    // Basic implementation that will be optimize later on.
+
+    int i, j, k;
+
+    for (i = 0 ; i < size ; i++) {
+        for (k = 0 ; k < size ; k++) {
+            for (j = 0 ; j < size ; j++) {
+                C[i][j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+
+}
+
+int** copyMat(int** in, int row, int col){
+
+    int** out = createMat(row, col);
+
+    for (int i = 0; i < row; ++i) {
+        for (int j = 0; j < col; ++j) {
+            out[i][j] = in[i][j];
+        }
+    }
 
 }

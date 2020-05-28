@@ -21,12 +21,12 @@ int main(int argc, char *argv[]) {
     double sq = sqrt(wsize);
     if (floor(sq) != sq) {
         MPI_Finalize();
-        iVERBOSE printf("A square number of proc is mandatory, found %d", wsize);
+        iELSE printf("A square number of proc is mandatory, found %d", wsize);
         return 1;
     }
     else if(floor(MDIM/sq) != MDIM/sq) {
         MPI_Finalize();
-        iVERBOSE printf("With %d proc and size %d the submatrices can't be square", wsize, MDIM);
+        iELSE printf("With %d proc and size %d the submatrices can't be square", wsize, MDIM);
         return 1;
     }
 
@@ -35,10 +35,14 @@ int main(int argc, char *argv[]) {
     int side = (int) sq; // squarre root of the number of proc
     int subside = MDIM/sq; // size of sub matrix
 
-    int** A; // matrix A
+    int** A = NULL; // matrix A
+    int** B = NULL; // matrix B
+    int** C = NULL; // matrix C
 
-    int** pA; // sub matrix A
-    int** pB; // sub matrix B
+    int** pA = NULL; // sub matrix A
+    int** pAb = NULL; // b for backup like when broadcasting, it is meant to be overwritten
+    int** pB = NULL; // sub matrix B
+    int** pC = NULL; // sub matrix C
 
 
     int periods[NDIM] = {[0 ... NDIM-1] = 1}; // periods link both ends of the mesh (true or false)
@@ -48,38 +52,6 @@ int main(int argc, char *argv[]) {
     // Create the topo
     MPI_Dims_create(wsize, NDIM, dims);
     MPI_Cart_create(MPI_COMM_WORLD, NDIM, dims, periods, 1, &squareCom);
-
-    // Experiment
-
-    iUNIQUE {
-        writeMat("A", MDIM, MDIM);
-        A = loadMat("A");
-
-        printMat(A, MDIM, MDIM);
-
-        pA = loadSubMatFromMat(A, subside, subside, squareCom);
-        // pA = loadSubMatFromFile("A", subside, subside, squareCom);
-
-        printf("--\n");
-
-        printMat(pA, subside, subside);
-        printf("\n");
-
-        free(pA);
-        free(A);
-
-    }
-
-    MPI_Barrier(squareCom);
-
-    if(VERBOSE){
-        pA = loadSubMatFromFile("A", subside, subside, squareCom);
-
-        printMat(pA, subside, subside);
-        printf("\n");
-
-        free(pA);
-    }
 
     // We create sub com for each line
     MPI_Comm subLines[side];
@@ -94,6 +66,52 @@ int main(int argc, char *argv[]) {
 
     // ============================
 
+
+
+    // Experiment
+    iUNIQUE {
+        // writeRandMat("A", MDIM, MDIM); // Create A if needed
+        // writeRandMat("B", MDIM, MDIM); // Create B
+
+        A = loadMat("A"); // Load A mostly to show it
+        B = loadMat("B");
+
+        iVERBOSE printMat(A, MDIM, MDIM);
+        iVERBOSE printMat(B, MDIM, MDIM);
+
+
+        C = createMat(MDIM, MDIM);
+        initZeroMat(C, MDIM, MDIM);
+
+        perfMultiply(A, B, C, MDIM);
+
+        iVERBOSE printMat(C, MDIM, MDIM);
+
+        free(A);
+        free(B);
+        free(C);
+
+    }
+
+    MPI_Barrier(squareCom); // if A and B are being written, we have to wait for the procedure to end
+
+    pA = loadSubMatFromFile("A", subside, subside, squareCom);
+    pAb = copyMat(pA, subside, subside);
+    pB = loadSubMatFromFile("B", subside, subside, squareCom);
+
+    iVERBOSE printMat(pA, subside, subside);
+    iVERBOSE printMat(pB, subside, subside);
+
+    if(ELSE){
+
+    }
+
+    // Free up
+
+    free(pA);
+    free(pB);
+
+    //
 
     MPI_Finalize(); // Mandatory
 
