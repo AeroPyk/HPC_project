@@ -6,6 +6,6 @@ set(CMAKE_C_STANDARD 99)
 
 find_package(MPI REQUIRED) # define MPI function
 
-add_executable(main main.c)
+add_executable(main main.c ext.h ext.c)
 
 target_link_libraries(main ${MPI_LIBRARIES})
