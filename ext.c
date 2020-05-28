@@ -162,6 +162,8 @@ int** loadSubMatFromFile(char* name, int row, int col, MPI_Comm com) {
     int coords[NDIM];
     MPI_Cart_coords(com, rank, NDIM, coords);
 
+    // printf("debug:%d,%d, rank %d", coords[0], coords[1], rank);
+
     FILE* file = fopen(name, "r");
 
     if(file != NULL){
@@ -181,10 +183,10 @@ int** loadSubMatFromFile(char* name, int row, int col, MPI_Comm com) {
                 x = i + row*coords[0];
                 y = j + col*coords[1];
                 last = offset;
-                offset = x*size[1] + y;
+                offset = x*size[1] + y + 1; // This +1 makes thing alright but not according to paper calculations...
 
-                for (int k = 0; k < offset - last; ++k) {
-                    fscanf(file, "%d ", num); // skip numbers in between
+                for (int k = 0; k < offset - last - 1; ++k) {
+                    fscanf(file, "%d ", &num); // skip numbers in between
                 }
                 fscanf(file, "%d ", &submat[i][j]);
 

@@ -35,6 +35,8 @@ int main(int argc, char *argv[]) {
     int side = (int) sq; // squarre root of the number of proc
     int subside = MDIM/sq; // size of sub matrix
 
+    int** A; // matrix A
+
     int** pA; // sub matrix A
     int** pB; // sub matrix B
 
@@ -48,22 +50,35 @@ int main(int argc, char *argv[]) {
     MPI_Cart_create(MPI_COMM_WORLD, NDIM, dims, periods, 1, &squareCom);
 
     // Experiment
+
     iUNIQUE {
-        int** A;
         writeMat("A", MDIM, MDIM);
         A = loadMat("A");
 
         printMat(A, MDIM, MDIM);
 
         pA = loadSubMatFromMat(A, subside, subside, squareCom);
+        // pA = loadSubMatFromFile("A", subside, subside, squareCom);
 
-        printf("\n");
+        printf("--\n");
 
         printMat(pA, subside, subside);
+        printf("\n");
 
         free(pA);
         free(A);
 
+    }
+
+    MPI_Barrier(squareCom);
+
+    if(VERBOSE){
+        pA = loadSubMatFromFile("A", subside, subside, squareCom);
+
+        printMat(pA, subside, subside);
+        printf("\n");
+
+        free(pA);
     }
 
     // We create sub com for each line

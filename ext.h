@@ -6,12 +6,12 @@
 #define PROJECTMM_EXT_H
 
 #define NDIM 2 // For dimension
-#define MDIM 4 // For matrix size (MDIM * MDIM)
-#define UNIQUE wrank == 0 // Only wrank proc print
-#define VERBOSE 1 && UNIQUE
+#define MDIM 8 // For matrix size (MDIM * MDIM)
+#define UNIQUE (wrank == 2) // Only wrank proc print
+#define VERBOSE 1 && !UNIQUE
 
 #define iUNIQUE if(UNIQUE)
-#define iVERBOSE if(UNIQUE)
+#define iVERBOSE if(VERBOSE)
 
 void printTopo(MPI_Comm com);
 void printCoord(int rank, MPI_Comm com);
