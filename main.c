@@ -32,8 +32,8 @@ int main(int argc, char *argv[]) {
 
     // ===============================
 
-    int side = (int) sq; // squarre root of the number of proc
-    int subside = MDIM/sq; // size of sub matrix
+    int sideProc = (int) sq; // squarre root of the number of proc
+    int subsideMat = MDIM / sideProc; // size of sub matrix
 
     int** A = NULL; // matrix A
     int** B = NULL; // matrix B
@@ -54,12 +54,12 @@ int main(int argc, char *argv[]) {
     MPI_Cart_create(MPI_COMM_WORLD, NDIM, dims, periods, 1, &squareCom);
 
     // We create sub com for each line
-    MPI_Comm subLines[side];
-    MPI_Comm subCol[side];
+    MPI_Comm subLines[sideProc];
+    MPI_Comm subCol[sideProc];
     int remainLine[2] = {0, 1}; // true / false for dimension
     int remainCol[2] = {1,0};
 
-    for (int i = 0; i < side; ++i) {
+    for (int i = 0; i < sideProc; ++i) {
         MPI_Cart_sub(squareCom, remainLine, &subLines[i]);
         MPI_Cart_sub(squareCom, remainCol, &subCol[i]);
     }
@@ -69,9 +69,11 @@ int main(int argc, char *argv[]) {
 
 
     // Experiment
+
+    // Row calculation with one process to compare
     iUNIQUE {
-        // writeRandMat("A", MDIM, MDIM); // Create A if needed
-        // writeRandMat("B", MDIM, MDIM); // Create B
+        writeRandMat("A", MDIM, MDIM); // Create A if needed: like when resizing MDIM !!!
+        writeRandMat("B", MDIM, MDIM); // Create B
 
         A = loadMat("A"); // Load A mostly to show it
         B = loadMat("B");
@@ -87,29 +89,99 @@ int main(int argc, char *argv[]) {
 
         iVERBOSE printMat(C, MDIM, MDIM);
 
-        free(A);
-        free(B);
-        free(C);
+        freeM(A, MDIM);
+        freeM(B, MDIM);
+        freeM(C, MDIM);
 
     }
 
     MPI_Barrier(squareCom); // if A and B are being written, we have to wait for the procedure to end
 
-    pA = loadSubMatFromFile("A", subside, subside, squareCom);
-    pAb = copyMat(pA, subside, subside);
-    pB = loadSubMatFromFile("B", subside, subside, squareCom);
-
-    iVERBOSE printMat(pA, subside, subside);
-    iVERBOSE printMat(pB, subside, subside);
+    pA = loadSubMatFromFile("A", subsideMat, subsideMat, squareCom);
+    pAb = copyMat(pA, subsideMat, subsideMat);
+    pB = loadSubMatFromFile("B", subsideMat, subsideMat, squareCom);
+    pC = createMat(subsideMat, subsideMat);
+    initZeroMat(pC, subsideMat, subsideMat);
 
     if(ELSE){
 
     }
 
+    // If you think of it, the broad casting can also be seen as a sequential broadcast of the same column with an offset ... instead of the diagonal + i.
+
+    // Each process gets its rank and coordinates
+    int** tmp = NULL;
+    int root;
+    int rank;
+    MPI_Comm_rank(squareCom, &rank);
+    int coords[NDIM];
+    MPI_Cart_coords(squareCom, rank, NDIM, coords);
+
+    int subrankLine;
+    MPI_Comm_rank(subLines[coords[0]], &subrankLine);
+
+    // For B we get the destination before since it doesn't change across the turns
+    int src_rank, dest_rank;
+    MPI_Cart_shift(subCol[coords[1]], 0, -1, &src_rank, &dest_rank);
+
+    // printf("debug: dest %d , from [%d, %d]; ", dest_rank, coords[0], coords[1]);
+
+    for (int turn = 0; turn < sideProc; ++turn) {
+
+
+        // ============ A ==============
+
+        root = (turn + coords[0])%sideProc;
+
+        // When you're root you use your backup to calculate
+        if(subrankLine == root) {
+            tmp = pA;
+            pA = pAb;
+        }
+        // Otherwise the one broadcasted
+
+
+        MPI_Bcast(&(pA[0][0]), subsideMat * subsideMat, MPI_INT, root, subLines[coords[0]]); // Every process calls it!! That's why the root is precised
+
+        // iVERBOSE printf("from [%d, %d]\n", coords[0], coords[1]);
+        // iVERBOSE printMat(pA, subsideMat, subsideMat);
+        // iVERBOSE printf("x\n");
+
+        // ============ C ==============
+        // iVERBOSE printMat(pB, subsideMat, subsideMat);
+        // iVERBOSE printf("=\n");
+
+        perfMultiply(pA, pB, pC, subsideMat);
+        // iVERBOSE printMat(pC, subsideMat, subsideMat);
+
+        // ============ B ==============
+
+        MPI_Sendrecv_replace(&(pB[0][0]), subsideMat*subsideMat, MPI_INT, dest_rank, 100, src_rank, MPI_ANY_TAG, subCol[coords[1]], MPI_STATUS_IGNORE);
+
+
+
+        // At the end we have to put back the original pA or we're going to lose the allocated space
+        if(subrankLine == root) {
+            pA = tmp;
+        }
+
+
+        //iUNIQUE printMat(pAb, subsideMat, subsideMat);
+
+    }
+
+    // C result of each process
+    iVERBOSE printf("from [%d, %d]\n", coords[0], coords[1]);
+    iVERBOSE printMat(pC, subsideMat, subsideMat);
+
+
     // Free up
 
-    free(pA);
-    free(pB);
+    freeM(pA, subsideMat);
+    freeM(pAb, subsideMat);
+    freeM(pB, subsideMat);
+    freeM(pC, subsideMat);
+    // freeM(tmp, subsideMat);
 
     //
 

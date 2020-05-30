@@ -6,7 +6,10 @@
 #define PROJECTMM_EXT_H
 
 #define NDIM 2 // For dimension
-#define MDIM 2 // For matrix size (MDIM * MDIM)
+#define MDIM 9 // For matrix size (MDIM * MDIM)
+
+#define RMAX 50
+#define RMIN 0
 
 #define UNIQUE (wrank == 2) // Only wrank proc print
 #define ELSE 1 && !UNIQUE
@@ -34,5 +37,7 @@ int** createMat(int row, int col);
 
 void perfMultiply(int** A, int** B, int** C, int size);
 int** copyMat(int** in, int row, int col);
+
+void freeM(int ** mat, int row);
 
 #endif //PROJECTMM_EXT_H

@@ -79,7 +79,7 @@ void initRandMat(int** mat, int row, int col){
 
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
-            mat[i][j] = rand();
+            mat[i][j] = rand()%(RMAX - RMIN) + RMIN;
         }
     }
 }
@@ -225,11 +225,23 @@ int** loadSubMatFromFile(char* name, int row, int col, MPI_Comm com) {
 
 int** createMat(int row, int col){
 
+    /*
     int **arr = (int **)malloc(row * sizeof(int *));
     for (int i=0; i<row; i++)
         arr[i] = (int *)malloc(col * sizeof(int));
 
     return arr;
+    */
+
+    // This allocation below get consecutive memory to simplify the transfer with MPI
+
+
+    int *data = (int *)malloc(row*col*sizeof(int));
+    int **array= (int **)malloc(row*sizeof(int*));
+    for (int i=0; i<row; i++)
+        array[i] = &(data[col*i]);
+
+    return array;
 
 }
 
@@ -258,4 +270,14 @@ int** copyMat(int** in, int row, int col){
         }
     }
 
+    return out;
+}
+
+void freeM(int ** mat, int row){
+
+    if(mat != NULL) {
+
+        free(mat);
+        mat = NULL;
+    }
 }
