@@ -6,8 +6,9 @@
 #define PROJECTMM_EXT_H
 
 #define NDIM 2 // For dimension
-#define MDIM 9 // For matrix size (MDIM * MDIM)
+#define MDIM 8 // For matrix size (MDIM * MDIM) // Nb proc <= MDIM*MDIM // Tested with MDIM = 128 and 64 proc on my laptop
 
+// MIN and MAX value to write the matrices
 #define RMAX 50
 #define RMIN 0
 

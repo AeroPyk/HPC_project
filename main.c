@@ -21,12 +21,12 @@ int main(int argc, char *argv[]) {
     double sq = sqrt(wsize);
     if (floor(sq) != sq) {
         MPI_Finalize();
-        iELSE printf("A square number of proc is mandatory, found %d", wsize);
+        iUNIQUE printf("A square number of proc is mandatory, found %d", wsize);
         return 1;
     }
     else if(floor(MDIM/sq) != MDIM/sq) {
         MPI_Finalize();
-        iELSE printf("With %d proc and size %d the submatrices can't be square", wsize, MDIM);
+        iUNIQUE printf("With %d proc and size %d the submatrices can't be square", wsize, MDIM);
         return 1;
     }
 
@@ -102,10 +102,6 @@ int main(int argc, char *argv[]) {
     pC = createMat(subsideMat, subsideMat);
     initZeroMat(pC, subsideMat, subsideMat);
 
-    if(ELSE){
-
-    }
-
     // If you think of it, the broad casting can also be seen as a sequential broadcast of the same column with an offset ... instead of the diagonal + i.
 
     // Each process gets its rank and coordinates
@@ -176,8 +172,8 @@ int main(int argc, char *argv[]) {
 
     // Gather
 
-    int** Cb = createMat(MDIM, MDIM);
-    initZeroMat(Cb, MDIM, MDIM);
+    // Caveat: wsize doesnt come from the cartesian
+    int** Cb = createMat(wsize, subsideMat*subsideMat);
     MPI_Gather(&(pC[0][0]), subsideMat*subsideMat, MPI_INT, &(Cb[0][0]), subsideMat*subsideMat, MPI_INT, 0, squareCom);
 
     iUNIQUE {

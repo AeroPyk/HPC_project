@@ -296,6 +296,7 @@ void linesToMat(int*** mat, int row, int col, int subrow, int subcol, MPI_Comm c
             MPI_Cart_rank(comm, coord, &rank);
             // printCoord(rank, comm);
             // printf("debug: [%d,%d] [%d,%d]\n\n", i, j, rank, (i%subrow)*subrow + j%subcol);
+
             transformed[i][j] = (*mat)[rank][(i%subrow)*subrow + j%subcol];
 
         }
