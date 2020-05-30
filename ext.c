@@ -244,15 +244,19 @@ int** createMat(int row, int col){
 void perfMultiply(int** A, int** B, int** C, int size){
     // Basic implementation that will be optimize later on.
 
-    int i, j, k;
-// #pragma omp parallel for
-    for (i = 0 ; i < size ; i++) {
-        for (k = 0 ; k < size ; k++) {
-            for (j = 0 ; j < size ; j++) {
-                C[i][j] += A[i][k] * B[k][j];
+#pragma omp parallel shared(A,B,C)
+    {
+#pragma omp for schedule(static)
+        for (int i = 0 ; i < size ; i++) {
+            for (int k = 0 ; k < size ; k++) {
+                for (int j = 0 ; j < size ; j++) {
+                    C[i][j] += A[i][k] * B[k][j];
+                }
             }
         }
     }
+	
+// https://www.appentra.com/parallel-matrix-matrix-multiplication/
 
 }
 
