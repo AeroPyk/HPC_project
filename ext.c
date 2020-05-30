@@ -281,3 +281,41 @@ void freeM(int ** mat, int row){
         mat = NULL;
     }
 }
+
+void linesToMat(int*** mat, int row, int col, int subrow, int subcol, MPI_Comm comm){
+
+    int** transformed = createMat(row, col);
+    int rank;
+    int coord[2];
+
+    for (int i = 0; i < row; ++i) {
+        for (int j = 0; j < col; ++j) {
+
+            coord[0] = i/subrow;
+            coord[1] = j/subcol;
+            MPI_Cart_rank(comm, coord, &rank);
+            // printCoord(rank, comm);
+            // printf("debug: [%d,%d] [%d,%d]\n\n", i, j, rank, (i%subrow)*subrow + j%subcol);
+            transformed[i][j] = (*mat)[rank][(i%subrow)*subrow + j%subcol];
+
+        }
+    }
+
+    freeM(*mat, row);
+    *mat = transformed;
+
+}
+
+int equalMat(int** A, int** B, int row, int col){
+
+    for (int i = 0; i < row; ++i) {
+        for (int j = 0; j < col; ++j) {
+            if (A[i][j] != B[i][j]){
+
+                return 0;
+            }
+        }
+    }
+
+    return 1;
+}

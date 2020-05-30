@@ -11,9 +11,9 @@
 #define RMAX 50
 #define RMIN 0
 
-#define UNIQUE (wrank == 2) // Only wrank proc print
+#define UNIQUE (wrank == 0) // Only wrank proc print
 #define ELSE 1 && !UNIQUE
-#define VERBOSE 1
+#define VERBOSE 0
 
 #define iUNIQUE if(UNIQUE)
 #define iELSE if(ELSE)
@@ -39,5 +39,9 @@ void perfMultiply(int** A, int** B, int** C, int size);
 int** copyMat(int** in, int row, int col);
 
 void freeM(int ** mat, int row);
+
+void linesToMat(int*** mat, int row, int col, int subrow, int subcol, MPI_Comm comm);
+
+int equalMat(int** A, int** B, int row, int col);
 
 #endif //PROJECTMM_EXT_H

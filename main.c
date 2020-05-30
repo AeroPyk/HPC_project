@@ -91,7 +91,6 @@ int main(int argc, char *argv[]) {
 
         freeM(A, MDIM);
         freeM(B, MDIM);
-        freeM(C, MDIM);
 
     }
 
@@ -171,9 +170,26 @@ int main(int argc, char *argv[]) {
     }
 
     // C result of each process
-    iVERBOSE printf("from [%d, %d]\n", coords[0], coords[1]);
-    iVERBOSE printMat(pC, subsideMat, subsideMat);
+    // iVERBOSE printf("from [%d, %d]\n", coords[0], coords[1]);
+    // iVERBOSE printMat(pC, subsideMat, subsideMat);
 
+
+    // Gather
+
+    int** Cb = createMat(MDIM, MDIM);
+    initZeroMat(Cb, MDIM, MDIM);
+    MPI_Gather(&(pC[0][0]), subsideMat*subsideMat, MPI_INT, &(Cb[0][0]), subsideMat*subsideMat, MPI_INT, 0, squareCom);
+
+    iUNIQUE {
+        linesToMat(&Cb, MDIM, MDIM, subsideMat, subsideMat, squareCom);
+        iVERBOSE printMat(Cb, MDIM, MDIM);
+        if(!equalMat(C, Cb, MDIM, MDIM)){
+            printf("Matrices not equal");
+        } else {
+            printf("Tutto bene\n");
+            writeMat("C", Cb, MDIM, MDIM);
+        }
+    }
 
     // Free up
 
@@ -181,7 +197,8 @@ int main(int argc, char *argv[]) {
     freeM(pAb, subsideMat);
     freeM(pB, subsideMat);
     freeM(pC, subsideMat);
-    // freeM(tmp, subsideMat);
+    freeM(C, MDIM);
+    freeM(Cb, MDIM);
 
     //
 
