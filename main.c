@@ -3,6 +3,8 @@
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
+
+
 #include "ext.h"
 
 
@@ -12,7 +14,7 @@ int main(int argc, char *argv[]) {
 
     int wrank, wsize, provided;
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &provided);
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided); // MPI_THREAD_SINGLE, MPI_THREAD_FUNNELED, MPI_THREAD_SERIALIZED, MPI_THREAD_MULTIPLE
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
 
@@ -147,6 +149,9 @@ int main(int argc, char *argv[]) {
         // iVERBOSE printf("=\n");
 
         perfMultiply(pA, pB, pC, subsideMat);
+        // From class about intel matrix multiplication: not tested yet since I cannot run this library at the time on my computer.
+        // cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, subsideMat, subsideMat, subsideMat, 1.0, &(A[0][0]), subsideMat, &(B[0][0]), subsideMat, 1.0, &(C[0][0]), subsideMat);
+
         // iVERBOSE printMat(pC, subsideMat, subsideMat);
 
         // ============ B ==============

@@ -10,8 +10,9 @@
 
 // MIN and MAX value to write the matrices
 #define RMAX 50
-#define RMIN 0
+#define RMIN -50
 
+// macro to manage whether one or several process do something
 #define UNIQUE (wrank == 0) // Only wrank proc print
 #define ELSE 1 && !UNIQUE
 #define VERBOSE 0
@@ -20,10 +21,13 @@
 #define iELSE if(ELSE)
 #define iVERBOSE if(VERBOSE)
 
+// debug topo
 void printTopo(MPI_Comm com);
 void printCoord(int rank, MPI_Comm com);
 int printNeigh(int rank, MPI_Comm com, int dir, int disp);
 
+
+// Matrices
 void printMat(int** mat, int row, int col);
 void initRandMat(int**, int, int);
 void initZeroMat(int** mat, int row, int col);

@@ -141,8 +141,6 @@ int** loadMat(char *name) {
             }
 
         }
-
-
         fclose(file);
 
         return mat;
@@ -180,8 +178,6 @@ int** loadSubMatFromFile(char* name, int row, int col, MPI_Comm com) {
     MPI_Cart_coords(com, rank, NDIM, coords);
 
     FILE* file = fopen(name, "r");
-
-
 
     if(file != NULL){
         int size[2];
@@ -249,7 +245,7 @@ void perfMultiply(int** A, int** B, int** C, int size){
     // Basic implementation that will be optimize later on.
 
     int i, j, k;
-
+// #pragma omp parallel for
     for (i = 0 ; i < size ; i++) {
         for (k = 0 ; k < size ; k++) {
             for (j = 0 ; j < size ; j++) {
@@ -262,6 +258,7 @@ void perfMultiply(int** A, int** B, int** C, int size){
 
 int** copyMat(int** in, int row, int col){
 
+    // especially for the back up of pA
     int** out = createMat(row, col);
 
     for (int i = 0; i < row; ++i) {
@@ -275,9 +272,15 @@ int** copyMat(int** in, int row, int col){
 
 void freeM(int ** mat, int row){
 
+    // I wanted to free up matrices row by row like a 2D array but it didn't work supposedly because after one free,
+    // since the allocation is consecutive in memory, nothing else is needed to be freed up
+    // Need to confirm with valgrind or similar
+    // if confirmed, int row can be deleted
+
     if(mat != NULL) {
 
-        free(mat);
+        free(&(mat[0][0])); // This free the large bundle of allocated memory (see how the memory is allocated above)
+        free(mat); // Then we free the array that was referring to starting lines
         mat = NULL;
     }
 }
@@ -312,11 +315,9 @@ int equalMat(int** A, int** B, int row, int col){
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
             if (A[i][j] != B[i][j]){
-
                 return 0;
             }
         }
     }
-
     return 1;
 }
