@@ -32,6 +32,10 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    // Timing
+
+    double startNaive = -1, stopNaive = -1, startMulti = -1, stopMulti = -1;
+
     // ===============================
 
     int sideProc = (int) sq; // squarre root of the number of proc
@@ -97,7 +101,9 @@ int main(int argc, char *argv[]) {
         C = createMat(MDIM, MDIM);
         initZeroMat(C, MDIM, MDIM); // Necessary since we += on C
 
+        startNaive = MPI_Wtime();
         perfMultiply(A, B, C, MDIM);
+        stopNaive = MPI_Wtime();
 
         iVERBOSE printf("C:\n");
         iVERBOSE printMat(C, MDIM, MDIM);
@@ -127,6 +133,7 @@ int main(int argc, char *argv[]) {
 
     // printf("debug: dest %d , from [%d, %d]; ", dest_rank, sqComCoords[0], sqComCoords[1]);
 
+    startMulti = MPI_Wtime();
     for (int turn = 0; turn < sideProc; ++turn) {
 
         // ============ A ==============
@@ -169,6 +176,7 @@ int main(int argc, char *argv[]) {
         //iUNIQUE printMat(pAb, subsideMat, subsideMat);
 
     }
+    stopMulti = MPI_Wtime();
 
     // C result of each process
     // iVERBOSE printf("from [%d, %d]\n", sqComCoords[0], sqComCoords[1]);
@@ -191,7 +199,7 @@ int main(int argc, char *argv[]) {
         if(!equalMat(C, Cb, MDIM, MDIM)){
             printf("Matrices not equal");
         } else {
-            printf("Va tutto bene\n");
+            printf("Va tutto bene\nNaive %lfs\nMulti %lfs", stopNaive-startNaive, stopMulti-startMulti);
             writeMat("C", Cb, MDIM, MDIM);
         }
     }

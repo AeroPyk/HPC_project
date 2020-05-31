@@ -1,0 +1,5 @@
+https://mpitutorial.com/tutorials/mpi-scatter-gather-and-allgather/
+https://www.mpich.org/static/docs/latest/www3/
+https://mpi.deino.net/mpi_functions/MPI_Bcast.html
+https://stackoverflow.com/questions/5901476/sending-and-receiving-2d-array-over-mpi
+paper.pdf
