@@ -10,7 +10,7 @@
 
 int main(int argc, char *argv[]) {
 
-    srand(time(NULL));
+    srand((unsigned int) time(NULL));
 
     int wrank, wsize, provided;
 
@@ -37,15 +37,18 @@ int main(int argc, char *argv[]) {
     int sideProc = (int) sq; // squarre root of the number of proc
     int subsideMat = MDIM / sideProc; // size of sub matrix
 
-    int** A = NULL; // matrix A
-    int** B = NULL; // matrix B
-    int** C = NULL; // matrix C
+    double** A = NULL; // matrix A
+    double** B = NULL; // matrix B
+    double** C = NULL; // matrix C
+    double **Cb = NULL;
 
-    int** pA = NULL; // sub matrix A
-    int** pAb = NULL; // b for backup like when broadcasting, it is meant to be overwritten
-    int** pB = NULL; // sub matrix B
-    int** pC = NULL; // sub matrix C
+    double** pA = NULL; // sub matrix A
+    double** pAb = NULL; // b for backup like when broadcasting, it is meant to be overwritten
+    double** pB = NULL; // sub matrix B
+    double** pC = NULL; // sub matrix C
+    double** tmp = NULL;
 
+    // ================= Topology ==================
 
     int periods[NDIM] = {[0 ... NDIM-1] = 1}; // periods link both ends of the mesh (true or false)
     int dims[NDIM] = {0};  // Those values are filled by MPI_Dims_create
@@ -66,37 +69,47 @@ int main(int argc, char *argv[]) {
         MPI_Cart_sub(squareCom, remainCol, &subCol[i]);
     }
 
-    // ============================
+    // Properties for each process
+    // Each get its rank inside the square topology and sub line topology and coordinates in square topology
+    int sqComRank;
+    MPI_Comm_rank(squareCom, &sqComRank);
+    int sqComCoords[NDIM];
+    MPI_Cart_coords(squareCom, sqComRank, NDIM, sqComCoords);
+    int subRankLine;
+    MPI_Comm_rank(subLines[sqComCoords[0]], &subRankLine);
 
+    // ===============================================
 
-
-    // Experiment
-
-    // Row calculation with one process to compare
+    // Calculation with one process to compare
     iUNIQUE {
         writeRandMat("A", MDIM, MDIM); // Create A if needed: like when resizing MDIM !!!
         writeRandMat("B", MDIM, MDIM); // Create B
 
-        A = loadMat("A"); // Load A mostly to show it
-        B = loadMat("B");
+        A = loadMat("A"); // Load A (from file)
+        B = loadMat("B"); // Load B
 
+        iVERBOSE printf("A:\n");
         iVERBOSE printMat(A, MDIM, MDIM);
+        iVERBOSE printf("B:\n");
         iVERBOSE printMat(B, MDIM, MDIM);
 
 
         C = createMat(MDIM, MDIM);
-        initZeroMat(C, MDIM, MDIM);
+        initZeroMat(C, MDIM, MDIM); // Necessary since we += on C
 
         perfMultiply(A, B, C, MDIM);
 
+        iVERBOSE printf("C:\n");
         iVERBOSE printMat(C, MDIM, MDIM);
 
-        freeM(A, MDIM);
-        freeM(B, MDIM);
+        freeM(&A);
+        freeM(&B);
 
     }
 
     MPI_Barrier(squareCom); // if A and B are being written, we have to wait for the procedure to end
+
+    // ========== Multi processing ============
 
     pA = loadSubMatFromFile("A", subsideMat, subsideMat, squareCom);
     pAb = copyMat(pA, subsideMat, subsideMat);
@@ -106,41 +119,30 @@ int main(int argc, char *argv[]) {
 
     // If you think of it, the broad casting can also be seen as a sequential broadcast of the same column with an offset ... instead of the diagonal + i.
 
-    // Each process gets its rank and coordinates
-    int** tmp = NULL;
-    int root;
-    int rank;
-    MPI_Comm_rank(squareCom, &rank);
-    int coords[NDIM];
-    MPI_Cart_coords(squareCom, rank, NDIM, coords);
-
-    int subrankLine;
-    MPI_Comm_rank(subLines[coords[0]], &subrankLine);
+    int root; // Will hold the root rank for each broadcast
 
     // For B we get the destination before since it doesn't change across the turns
-    int src_rank, dest_rank;
-    MPI_Cart_shift(subCol[coords[1]], 0, -1, &src_rank, &dest_rank);
+    int src_rank, dest_rank; // will recv pB from src_rank and send it to dest_rank
+    MPI_Cart_shift(subCol[sqComCoords[1]], 0, -1, &src_rank, &dest_rank);
 
-    // printf("debug: dest %d , from [%d, %d]; ", dest_rank, coords[0], coords[1]);
+    // printf("debug: dest %d , from [%d, %d]; ", dest_rank, sqComCoords[0], sqComCoords[1]);
 
     for (int turn = 0; turn < sideProc; ++turn) {
 
-
         // ============ A ==============
 
-        root = (turn + coords[0])%sideProc;
+        root = (turn + sqComCoords[0]) % sideProc;
 
         // When you're root you use your backup to calculate
-        if(subrankLine == root) {
+        if(subRankLine == root) {
             tmp = pA;
             pA = pAb;
         }
         // Otherwise the one broadcasted
 
+        MPI_Bcast(&(pA[0][0]), subsideMat * subsideMat, MPI_DOUBLE, root, subLines[sqComCoords[0]]); // Every process calls it!! That's why the root is precised
 
-        MPI_Bcast(&(pA[0][0]), subsideMat * subsideMat, MPI_INT, root, subLines[coords[0]]); // Every process calls it!! That's why the root is precised
-
-        // iVERBOSE printf("from [%d, %d]\n", coords[0], coords[1]);
+        // iVERBOSE printf("from [%d, %d]\n", sqComCoords[0], sqComCoords[1]);
         // iVERBOSE printMat(pA, subsideMat, subsideMat);
         // iVERBOSE printf("x\n");
 
@@ -156,50 +158,55 @@ int main(int argc, char *argv[]) {
 
         // ============ B ==============
 
-        MPI_Sendrecv_replace(&(pB[0][0]), subsideMat*subsideMat, MPI_INT, dest_rank, 100, src_rank, MPI_ANY_TAG, subCol[coords[1]], MPI_STATUS_IGNORE);
-
-
+        MPI_Sendrecv_replace(&(pB[0][0]), subsideMat*subsideMat, MPI_DOUBLE, dest_rank, 100, src_rank, MPI_ANY_TAG, subCol[sqComCoords[1]], MPI_STATUS_IGNORE);
 
         // At the end we have to put back the original pA or we're going to lose the allocated space
-        if(subrankLine == root) {
+        if(subRankLine == root) {
             pA = tmp;
+            tmp = NULL; // tmp is no more useful at this point and we put it back at NULL
         }
-
 
         //iUNIQUE printMat(pAb, subsideMat, subsideMat);
 
     }
 
     // C result of each process
-    // iVERBOSE printf("from [%d, %d]\n", coords[0], coords[1]);
+    // iVERBOSE printf("from [%d, %d]\n", sqComCoords[0], sqComCoords[1]);
     // iVERBOSE printMat(pC, subsideMat, subsideMat);
 
+    // ================== Gather ====================
 
-    // Gather
+    // We split here to avoid all process but one creating Cb
+    iUNIQUE {
+        // Caveat: wsize doesnt come from the cartesian
+        Cb = createMat(wsize, subsideMat * subsideMat);
+        MPI_Gather(&(pC[0][0]), subsideMat * subsideMat, MPI_DOUBLE, &(Cb[0][0]), subsideMat * subsideMat, MPI_DOUBLE, uRANK, squareCom);
+    }
+    iELSE MPI_Gather(&(pC[0][0]), subsideMat * subsideMat, MPI_DOUBLE, NULL, subsideMat * subsideMat, MPI_DOUBLE, uRANK, squareCom);
 
-    // Caveat: wsize doesnt come from the cartesian
-    int** Cb = createMat(wsize, subsideMat*subsideMat);
-    MPI_Gather(&(pC[0][0]), subsideMat*subsideMat, MPI_INT, &(Cb[0][0]), subsideMat*subsideMat, MPI_INT, 0, squareCom);
-
+    // Once the data gathered:
     iUNIQUE {
         linesToMat(&Cb, MDIM, MDIM, subsideMat, subsideMat, squareCom);
         iVERBOSE printMat(Cb, MDIM, MDIM);
         if(!equalMat(C, Cb, MDIM, MDIM)){
             printf("Matrices not equal");
         } else {
-            printf("Tutto bene\n");
+            printf("Va tutto bene\n");
             writeMat("C", Cb, MDIM, MDIM);
         }
     }
 
     // Free up
 
-    freeM(pA, subsideMat);
-    freeM(pAb, subsideMat);
-    freeM(pB, subsideMat);
-    freeM(pC, subsideMat);
-    freeM(C, MDIM);
-    freeM(Cb, MDIM);
+    freeM(&pA);
+    freeM(&pAb);
+    freeM(&pB);
+    freeM(&pC);
+    freeM(&A);
+    freeM(&B);
+    freeM(&C);
+    freeM(&Cb);
+    freeM(&tmp);
 
     //
 

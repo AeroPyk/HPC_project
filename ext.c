@@ -64,27 +64,27 @@ int printNeigh(int rank, MPI_Comm com, int dir, int disp){
     return dest_rank;
 }
 
-void printMat(int** mat, int row, int col){
+void printMat(double** mat, int row, int col){
 
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
-            printf("%d\t", *(*(mat+i)+j));
+            printf("%lf\t", *(*(mat+i)+j));
         }
         printf("\n");
     }
     printf("\n");
 }
 
-void initRandMat(int** mat, int row, int col){
+void initRandMat(double** mat, int row, int col){
 
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
-            mat[i][j] = rand()%(RMAX - RMIN) + RMIN;
+            mat[i][j] = drand(); // rand()%(RMAX - RMIN) + RMIN; // for int, second choice
         }
     }
 }
 
-void initZeroMat(int** mat, int row, int col){
+void initZeroMat(double** mat, int row, int col){
 
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
@@ -95,17 +95,18 @@ void initZeroMat(int** mat, int row, int col){
 
 void writeRandMat(char *name, int row, int col) {
 
-    int** mat;
+    double** mat;
     mat = createMat(row, col);
     initRandMat(mat, row, col);
 
     writeMat(name, mat, row, col);
 
-    free(mat);
+    freeM(&mat);
 
 }
 
-void writeMat(char *name, int** mat, int row, int col){
+void writeMat(char *name, double** mat, int row, int col){
+    // format = {"row col " + "value "*(row*col)}
     FILE* file = fopen(name, "w");
 
     if(file != NULL){
@@ -114,17 +115,17 @@ void writeMat(char *name, int** mat, int row, int col){
 
         for (int i = 0; i < row; ++i) {
             for (int j = 0; j < col; ++j) {
-                fprintf(file,"%d ", mat[i][j]);
+                fprintf(file,"%lf ", mat[i][j]);
             }
         }
 
         fclose(file);
     } else {
-        printf("Error writting file");
+        printf("Error writing file");
     }
 }
 
-int** loadMat(char *name) {
+double** loadMat(char *name) {
 
     FILE* file = fopen(name, "r");
 
@@ -133,11 +134,11 @@ int** loadMat(char *name) {
 
         fscanf(file, "%d %d ", &size[0], &size[1]);
 
-        int** mat = createMat(size[0], size[1]);
+        double** mat = createMat(size[0], size[1]);
 
         for (int i = 0; i < size[0]; ++i) {
             for (int j = 0; j < size[1]; ++j) {
-                fscanf(file, "%d ", &mat[i][j]);
+                fscanf(file, "%lf ", &mat[i][j]);
             }
 
         }
@@ -152,13 +153,14 @@ int** loadMat(char *name) {
     }
 }
 
-int** loadSubMatFromMat(int** mat, int row, int col, MPI_Comm com) {
+// sub matrices rely on rank coordinate since their are mapped; include memory allocation
+double** loadSubMatFromMat(double** mat, int row, int col, MPI_Comm com) {
     int rank;
     MPI_Comm_rank(com, &rank);
     int coords[NDIM];
     MPI_Cart_coords(com, rank, NDIM, coords);
 
-    int** submat = createMat(row, col);
+    double** submat = createMat(row, col);
 
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
@@ -170,7 +172,7 @@ int** loadSubMatFromMat(int** mat, int row, int col, MPI_Comm com) {
 
 }
 
-int** loadSubMatFromFile(char* name, int row, int col, MPI_Comm com) {
+double** loadSubMatFromFile(char* name, int row, int col, MPI_Comm com) {
 
     int rank;
     MPI_Comm_rank(com, &rank);
@@ -180,14 +182,14 @@ int** loadSubMatFromFile(char* name, int row, int col, MPI_Comm com) {
     FILE* file = fopen(name, "r");
 
     if(file != NULL){
-        int size[2];
+        int size[NDIM];
 
         fscanf(file, "%d %d ", &size[0], &size[1]);
 
-        int** submat = createMat(row, col);
+        double** submat = createMat(row, col);
         int offset = 0;
         int last = 0;
-        int num;
+        double num;
         int x, y = 0;
 
         for (int i = 0; i < row; ++i) {
@@ -199,9 +201,9 @@ int** loadSubMatFromFile(char* name, int row, int col, MPI_Comm com) {
                 offset = x*size[1] + y + 1; // This +1 makes thing alright but not according to paper calculations...
 
                 for (int k = 0; k < offset - last - 1; ++k) {
-                    fscanf(file, "%d ", &num); // skip numbers in between
+                    fscanf(file, "%lf ", &num); // skip numbers in between
                 }
-                fscanf(file, "%d ", &submat[i][j]);
+                fscanf(file, "%lf ", &submat[i][j]);
 
             }
 
@@ -219,21 +221,13 @@ int** loadSubMatFromFile(char* name, int row, int col, MPI_Comm com) {
 
 }
 
-int** createMat(int row, int col){
-
-    /*
-    int **arr = (int **)malloc(row * sizeof(int *));
-    for (int i=0; i<row; i++)
-        arr[i] = (int *)malloc(col * sizeof(int));
-
-    return arr;
-    */
+double** createMat(int row, int col){
 
     // This allocation below get consecutive memory to simplify the transfer with MPI
 
-
-    int *data = (int *)malloc(row*col*sizeof(int));
-    int **array= (int **)malloc(row*sizeof(int*));
+    double *data = (double *)malloc(row*col*sizeof(double)); // Space for data
+    double **array= (double **)malloc(row*sizeof(double*)); // array allocated for lines begin
+    // The loop matches both arrays
     for (int i=0; i<row; i++)
         array[i] = &(data[col*i]);
 
@@ -241,8 +235,7 @@ int** createMat(int row, int col){
 
 }
 
-void perfMultiply(int** A, int** B, int** C, int size){
-    // Basic implementation that will be optimize later on.
+void perfMultiply(double** A, double** B, double** C, int size){
 
 #pragma omp parallel shared(A,B,C)
     {
@@ -260,10 +253,10 @@ void perfMultiply(int** A, int** B, int** C, int size){
 
 }
 
-int** copyMat(int** in, int row, int col){
+double** copyMat(double** in, int row, int col){
 
-    // especially for the back up of pA
-    int** out = createMat(row, col);
+    // especially for the back up of pA (pAb)
+    double** out = createMat(row, col);
 
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
@@ -274,24 +267,24 @@ int** copyMat(int** in, int row, int col){
     return out;
 }
 
-void freeM(int ** mat, int row){
+void freeM(double ***pmat) {
 
     // I wanted to free up matrices row by row like a 2D array but it didn't work supposedly because after one free,
     // since the allocation is consecutive in memory, nothing else is needed to be freed up
     // Need to confirm with valgrind or similar
     // if confirmed, int row can be deleted
 
-    if(mat != NULL) {
+    if(*pmat != NULL) {
 
-        free(&(mat[0][0])); // This free the large bundle of allocated memory (see how the memory is allocated above)
-        free(mat); // Then we free the array that was referring to starting lines
-        mat = NULL;
+        free((*pmat)[0]); // This free the large bundle of consecutive allocated memory (see how the memory is allocated above)
+        free(*pmat); // Then we free the array that was referring to starting lines
+        *pmat = NULL;
     }
 }
 
-void linesToMat(int*** mat, int row, int col, int subrow, int subcol, MPI_Comm comm){
+void linesToMat(double*** mat, int row, int col, int subrow, int subcol, MPI_Comm comm){
 
-    int** transformed = createMat(row, col);
+    double** transformed = createMat(row, col);
     int rank;
     int coord[2];
 
@@ -309,19 +302,24 @@ void linesToMat(int*** mat, int row, int col, int subrow, int subcol, MPI_Comm c
         }
     }
 
-    freeM(*mat, row);
+    freeM(mat);
     *mat = transformed;
 
 }
 
-int equalMat(int** A, int** B, int row, int col){
+int equalMat(double** A, double** B, int row, int col){
 
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
-            if (A[i][j] != B[i][j]){
+            if (A[i][j] - B[i][j] > 0.00000001){
+                // Up to 1e-12
                 return 0;
             }
         }
     }
     return 1;
+}
+
+double drand (){
+    return ( (double)rand() * ( RMAX - RMIN ) ) / (double)RAND_MAX + RMIN;
 }
