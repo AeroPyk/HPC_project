@@ -2,7 +2,7 @@
 version: 2.1
 
 jobs:
-  job1:
+  job:
     docker: 
       - image: circleci/openjdk:8-jdk-stretch
     steps:
@@ -11,7 +11,7 @@ jobs:
       - run: mkdir myDir
       - run: ls
       
-  job2:
+  jobjob:
     docker: 
       - image: circleci/openjdk:8-jdk-stretch
     steps:
@@ -23,7 +23,7 @@ workflows:
   version: 2
   Show-me:
     jobs:
-      - job1
-      - job2:
+      - job
+      - jobjob:
         requires: 
-          - job1
+          - job
