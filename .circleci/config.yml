@@ -4,7 +4,7 @@ version: 2.1
 jobs:
   job1:
     docker: 
-      image: circleci/openjdk:8-jdk-stretch
+      - image: circleci/openjdk:8-jdk-stretch
     steps:
       - run: ls
       - run: ls /
@@ -13,7 +13,7 @@ jobs:
       
   job2:
     docker: 
-      image: circleci/openjdk:8-jdk-stretch
+      - image: circleci/openjdk:8-jdk-stretch
     steps:
       - run: ls
       - run: echo something
