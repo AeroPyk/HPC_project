@@ -10,6 +10,15 @@ jobs:
       - run: ls /
       - run: mkdir myDir
       - run: ls
+      - run:
+          command:|
+            whoami
+            pwd
+      -persist_to_workspace:
+          root: .
+          paths:
+            - myDir
+          
       
   job2:
     docker: 
