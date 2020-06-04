@@ -3,7 +3,8 @@ version: 2.1
 
 jobs:
   job1:
-    docker: circleci/openjdk:8-jdk-stretch
+    docker: 
+      image: circleci/openjdk:8-jdk-stretch
     steps:
       - run: ls
       - run: ls /
