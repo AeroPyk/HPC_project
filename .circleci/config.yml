@@ -11,10 +11,10 @@ jobs:
       - run: mkdir myDir
       - run: ls
       - run:
-          command:|
+          command: |
             whoami
             pwd
-      -persist_to_workspace:
+      - persist_to_workspace:
           root: .
           paths:
             - myDir
