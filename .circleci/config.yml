@@ -14,8 +14,9 @@ jobs:
           command: |
             whoami
             pwd
+            ls ..
       - persist_to_workspace:
-          root: .
+          root: ~/project
           paths:
             - myDir
           
@@ -24,6 +25,8 @@ jobs:
     docker: 
       - image: circleci/openjdk:8-jdk-stretch
     steps:
+      - attach_workspace:
+          at: ~/project
       - run: ls
       - run: echo something
 
