@@ -5,17 +5,16 @@ jobs:
   job1:
     docker: circleci/openjdk:8-jdk-stretch
     steps:
-      - run: |
-        ls
-        ls /
-        mkdir myDir
+      - run: ls
+      - run: ls /
+      - run: mkdir myDir
       - run: ls
       
   job2:
     docker: circleci/openjdk:8-jdk-stretch
     steps:
-      - ls
-      - echo something
+      - run: ls
+      - run: echo something
 
 # Orchestrate or schedule a set of jobs
 workflows:
