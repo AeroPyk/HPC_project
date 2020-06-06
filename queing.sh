@@ -9,10 +9,10 @@
 #SBATCH -J ProjectMM
 
 # 5 minutes wall-clock time will be given to this job
-#SBATCH -t 00:30:00
+#SBATCH -t 01:00:00
 
 # Number of Nodes
-#SBATCH --nodes=16
+#SBATCH --nodes=144
 
 # Number of MPI tasks per node
 #SBATCH --ntasks-per-node=1
@@ -25,7 +25,7 @@
 mkdir "res"
 chmod +x BeskowTools/*
 
-for dim in 1024 2048
+for dim in 1200 2400
 do
   MDIM=$dim
   export MDIM
@@ -41,7 +41,7 @@ do
 done
 
 # We can't naive multiply with 1 thread and size 4096, it takes ages
-for dim in 4096
+for dim in 3600 4200
 do
   MDIM=$dim
   export MDIM
