@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
         if(!equalMat(C, Cb, MDIM, MDIM)){
             printf("Matrices not equal");
         } else {
-            printf("Va tutto bene\nNaive %lfs\nMulti %lfs", stopNaive-startNaive, stopMulti-startMulti);
+            printf("Va tutto bene,Naive (s),%lf,Multi (s),%lf\n", stopNaive-startNaive, stopMulti-startMulti);
             writeMat("C", Cb, MDIM, MDIM);
         }
     }
