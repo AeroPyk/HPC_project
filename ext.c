@@ -126,7 +126,6 @@ void writeMat(char *name, double** mat, int row, int col){
 }
 
 double** loadMat(char *name) {
-
     FILE* file = fopen(name, "r");
 
     if(file != NULL){

@@ -18,6 +18,13 @@ int main(int argc, char *argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
 
+    int MDIM;
+    char *var = getenv("MDIM");
+    if(var == NULL){
+        MDIM = 2048;
+    } else {
+        MDIM = atoi(var);
+    }
 
     // Need a square number of proc and that we can match with square submatrices so far
     double sq = sqrt(wsize);
@@ -199,7 +206,7 @@ int main(int argc, char *argv[]) {
         if(!equalMat(C, Cb, MDIM, MDIM)){
             printf("Matrices not equal");
         } else {
-            printf("Va tutto bene,Naive (s),%lf,Multi (s),%lf\n", stopNaive-startNaive, stopMulti-startMulti);
+            printf("Va tutto bene\nNaive %lfs\nMulti %lfs\n", stopNaive-startNaive, stopMulti-startMulti);
             writeMat("C", Cb, MDIM, MDIM);
         }
     }

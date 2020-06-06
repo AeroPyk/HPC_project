@@ -6,7 +6,7 @@
 #define PROJECTMM_EXT_H
 
 #define NDIM 2 // For topology dimension should not be changed
-#define MDIM 16 // For matrix size (MDIM * MDIM) // Nb proc <= MDIM*MDIM // Tested with MDIM = 128 and 64 proc on my laptop
+// #define MDIM 4096 // For matrix size (MDIM * MDIM) // Nb proc <= MDIM*MDIM // Tested with MDIM = 128 and 64 proc on my laptop
 
 // MIN and MAX value to write the matrices
 #define RMAX 50
