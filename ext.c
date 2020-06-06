@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <mpi.h>
 #include <stdlib.h>
+#include <omp.h>
 #include "ext.h"
 
 void printTopo(MPI_Comm com){
