@@ -36,7 +36,7 @@ do
     OMP_NUM_THREADS=$TH
     export OMP_NUM_THREADS
 
-    srun ./main >> "res/res_$dim.txt" # We get the results per matrices
+    srun ./main >> "res/res_mat_$dim.txt" # We get the results per matrices
   done
 done
 
