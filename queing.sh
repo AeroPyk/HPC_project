@@ -22,12 +22,21 @@
 #SBATCH -e error_file.e
 #SBATCH -o output_file.o
 
-export OMP_NUM_THREADS=8
-
 # Run the executable named myexe
 # and write the output into my_output_file
-export MDIM="2048"
-srun ./main > res2048.txt
 
-export MDIM="4096"
-srun ./main > res4096.txt
+
+for dim in '1024' '2048' '4096' '8192'
+do
+  MDIM=$(dim)
+  expot MDIM
+  echo "Mat=$(MDIM)*$(MDIM)"
+
+  for TH in '1' '4' '8' '16' '24' '32'
+  do
+    OMP_NUM_THREADS=$(TH)
+    export OMP_NUM_THREADS
+
+    srun ./main >> "res_$(TH).txt"
+  done
+done
