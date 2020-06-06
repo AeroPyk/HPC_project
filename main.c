@@ -3,6 +3,7 @@
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
+#include <omp.h>
 
 
 #include "ext.h"
@@ -21,7 +22,7 @@ int main(int argc, char *argv[]) {
     int MDIM;
     char *var = getenv("MDIM");
     if(var == NULL){
-        MDIM = 2048;
+        MDIM = 256;
     } else {
         MDIM = atoi(var);
     }
@@ -204,9 +205,9 @@ int main(int argc, char *argv[]) {
         linesToMat(&Cb, MDIM, MDIM, subsideMat, subsideMat, squareCom);
         iVERBOSE printMat(Cb, MDIM, MDIM);
         if(!equalMat(C, Cb, MDIM, MDIM)){
-            printf("Matrices not equal");
+            printf("Matrices not equal\n");
         } else {
-            printf("Va tutto bene\nNaive %lfs\nMulti %lfs\n", stopNaive-startNaive, stopMulti-startMulti);
+            printf("Va tutto bene,Naive (s),%lf,Multi (s),%lf,proc,%d,thread,%d,mat,%d*%d\n", stopNaive-startNaive, stopMulti-startMulti, wsize, omp_get_max_threads(), MDIM, MDIM);
             writeMat("C", Cb, MDIM, MDIM);
         }
     }
