@@ -9,10 +9,10 @@
 #SBATCH -J ProjectMM
 
 # 5 minutes wall-clock time will be given to this job
-#SBATCH -t 00:14:00
+#SBATCH -t 00:30:00
 
 # Number of Nodes
-#SBATCH --nodes=4
+#SBATCH --nodes=16
 
 # Number of MPI tasks per node
 #SBATCH --ntasks-per-node=1
@@ -41,7 +41,7 @@ do
 done
 
 # We can't naive multiply with 1 thread and size 4096, it takes ages
-for dim in 4096 8192
+for dim in 4096
 do
   MDIM=$dim
   export MDIM
@@ -52,7 +52,7 @@ do
     OMP_NUM_THREADS=$TH
     export OMP_NUM_THREADS
 
-    srun ./main >> "res/res_$dim.txt" # We get the results per matrices
+    srun ./main >> "res/res_mat_$dim.txt" # We get the results per matrices
   done
 done
 
