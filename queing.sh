@@ -22,14 +22,13 @@
 #SBATCH -e error_file.e
 #SBATCH -o output_file.o
 
-# Run the executable named myexe
-# and write the output into my_output_file
-
+mkdir "res"
+chmod +x BeskowTools/*
 
 for dim in '1024' '2048' '4096' '8192'
 do
   MDIM=$(dim)
-  expot MDIM
+  export MDIM
   echo "Mat=$(MDIM)*$(MDIM)"
 
   for TH in '1' '4' '8' '16' '24' '32'
@@ -37,6 +36,8 @@ do
     OMP_NUM_THREADS=$(TH)
     export OMP_NUM_THREADS
 
-    srun ./main >> "res_$(TH).txt"
+    srun ./main >> "res/res_$(TH).txt"
   done
 done
+
+./BeskowTools/syncB.sh
