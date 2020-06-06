@@ -9,7 +9,7 @@
 #SBATCH -J ProjectMM
 
 # 5 minutes wall-clock time will be given to this job
-#SBATCH -t 00:05:00
+#SBATCH -t 00:14:00
 
 # Number of Nodes
 #SBATCH --nodes=4
@@ -25,7 +25,7 @@
 mkdir "res"
 chmod +x BeskowTools/*
 
-for dim in 1024 2048 4096 8192
+for dim in 1024 2048
 do
   MDIM=$dim
   export MDIM
@@ -36,7 +36,23 @@ do
     OMP_NUM_THREADS=$TH
     export OMP_NUM_THREADS
 
-    srun ./main >> "res/res_$TH.txt"
+    srun ./main >> "res/res_$dim.txt" # We get the results per matrices
+  done
+done
+
+# We can't naive multiply with 1 thread and size 4096, it takes ages
+for dim in 4096 8192
+do
+  MDIM=$dim
+  export MDIM
+  echo "Mat=$MDIM*$MDIM"
+
+  for TH in 8 16 24 32
+  do
+    OMP_NUM_THREADS=$TH
+    export OMP_NUM_THREADS
+
+    srun ./main >> "res/res_$dim.txt" # We get the results per matrices
   done
 done
 
