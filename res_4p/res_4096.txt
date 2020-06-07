@@ -1,0 +1,4 @@
+Va tutto bene,Naive (s),38.955273,Multi (s),13.399164,proc,4,thread,8,mat,4096*4096
+Va tutto bene,Naive (s),22.018669,Multi (s),9.324684,proc,4,thread,16,mat,4096*4096
+Va tutto bene,Naive (s),16.351151,Multi (s),8.537966,proc,4,thread,24,mat,4096*4096
+Va tutto bene,Naive (s),14.261940,Multi (s),8.753737,proc,4,thread,32,mat,4096*4096

@@ -1,0 +1,11 @@
+Va tutto bene,Naive (s),15.317560,Multi (s),2.837507,proc,144,thread,4,mat,2400*2400
+Va tutto bene,Naive (s),8.204610,Multi (s),2.586759,proc,144,thread,8,mat,2400*2400
+Va tutto bene,Naive (s),4.653428,Multi (s),2.616288,proc,144,thread,16,mat,2400*2400
+Va tutto bene,Naive (s),61.295260,Multi (s),3.112295,proc,144,thread,1,mat,2400*2400
+Va tutto bene,Naive (s),4.371299,Multi (s),2.659007,proc,144,thread,24,mat,2400*2400
+Matrices not equal
+Va tutto bene,Naive (s),4.079773,Multi (s),2.732720,proc,144,thread,32,mat,2400*2400
+Matrices not equal
+Va tutto bene,Naive (s),5.116172,Multi (s),2.908593,proc,144,thread,16,mat,2400*2400
+Matrices not equal
+Va tutto bene,Naive (s),3.953020,Multi (s),3.060602,proc,144,thread,32,mat,2400*2400

@@ -1,0 +1,6 @@
+Va tutto bene,Naive (s),4.357084,Multi (s),0.682885,proc,16,thread,1,mat,1024*1024
+Va tutto bene,Naive (s),1.138025,Multi (s),0.496343,proc,16,thread,4,mat,1024*1024
+Va tutto bene,Naive (s),0.670269,Multi (s),0.458992,proc,16,thread,8,mat,1024*1024
+Va tutto bene,Naive (s),0.351800,Multi (s),0.449658,proc,16,thread,16,mat,1024*1024
+Va tutto bene,Naive (s),0.450611,Multi (s),0.428381,proc,16,thread,24,mat,1024*1024
+Va tutto bene,Naive (s),0.351098,Multi (s),0.404936,proc,16,thread,32,mat,1024*1024

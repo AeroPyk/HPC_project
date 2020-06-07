@@ -1,0 +1,1 @@
+Va tutto bene,Naive (s),46.643537,Multi (s),8.757849,proc,144,thread,8,mat,4200*4200

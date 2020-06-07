@@ -1,0 +1,12 @@
+Va tutto bene,Naive (s),7.029243,Multi (s),0.781091,proc,144,thread,1,mat,1200*1200
+Va tutto bene,Naive (s),1.923039,Multi (s),0.798414,proc,144,thread,4,mat,1200*1200
+Va tutto bene,Naive (s),1.084728,Multi (s),0.873757,proc,144,thread,8,mat,1200*1200
+Va tutto bene,Naive (s),0.733626,Multi (s),0.871094,proc,144,thread,16,mat,1200*1200
+Va tutto bene,Naive (s),0.669591,Multi (s),0.950553,proc,144,thread,24,mat,1200*1200
+Va tutto bene,Naive (s),7.658068,Multi (s),0.649186,proc,144,thread,1,mat,1200*1200
+Va tutto bene,Naive (s),0.577929,Multi (s),0.921618,proc,144,thread,32,mat,1200*1200
+Va tutto bene,Naive (s),2.048548,Multi (s),0.805674,proc,144,thread,4,mat,1200*1200
+Va tutto bene,Naive (s),1.159392,Multi (s),0.812415,proc,144,thread,8,mat,1200*1200
+Va tutto bene,Naive (s),0.867484,Multi (s),0.873483,proc,144,thread,16,mat,1200*1200
+Va tutto bene,Naive (s),0.730835,Multi (s),0.949590,proc,144,thread,24,mat,1200*1200
+Va tutto bene,Naive (s),0.589340,Multi (s),0.959241,proc,144,thread,32,mat,1200*1200
